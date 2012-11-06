@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="image.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="glpainter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="algomap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="voronoi.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="voronoi_anim.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="algomap.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="colorf.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="geom.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="glpainter.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="image.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="voronoi.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="voronoi_anim.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
