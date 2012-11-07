@@ -4,19 +4,28 @@
 #include <sstream>
 
 #include <glpainter.h>
+#include <imgui.h>
 
 AlgoMap::AlgoMap() : 
-    curPOI              (18),
-    curAlgorithm        (Algorithm_VoronoiAnim),
-    blobImage           (0),
-    knobImage           (0),
-    bgImage             (0),
-    heatMapBlobRadius   (50)
+    m_curPOI            (18),
+    m_curAlgorithm      (Algorithm_VoronoiAnim),
+    m_blobImage         (0),
+    m_knobImage         (0),
+    m_bgImage           (0),
+    m_heatMapBlobRadius (50),
+    m_knobRadius        (10)
 {
-    algorithmNames.push_back("None");
-    algorithmNames.push_back("cHeatmap");
-    algorithmNames.push_back("Voronoi");
-    algorithmNames.push_back("VoronoiAnim");
+    m_algorithmNames.push_back("None");
+    m_algorithmNames.push_back("cHeatmap");
+    m_algorithmNames.push_back("Voronoi");
+    m_algorithmNames.push_back("VoronoiAnim");
+}
+
+void AlgoMap::init()
+{
+    loadPOI("data/poi.txt");
+
+    resetCurAlgorithm();
 }
 
 bool AlgoMap::loadPOI(const char* fileName)
@@ -27,8 +36,8 @@ bool AlgoMap::loadPOI(const char* fileName)
         return false;
     }
     
-    poiLocations.clear();
-    poiNames.clear();
+    m_poiLocations.clear();
+    m_poiNames.clear();
 
     //  read bounds
     float minlat, minlon, maxlat, maxlon;
@@ -50,10 +59,10 @@ bool AlgoMap::loadPOI(const char* fileName)
         {
             break;
         }
-        poiNames.push_back(type);
+        m_poiNames.push_back(type);
 
-        poiLocations.push_back(PointList());
-        PointList& loc = poiLocations.back();
+        m_poiLocations.push_back(PointList());
+        PointList& loc = m_poiLocations.back();
         std::getline(fin, locations);
         std::stringstream locstream(locations);
         while (!locstream.eof())
@@ -75,83 +84,92 @@ bool AlgoMap::loadPOI(const char* fileName)
     return true;
 }
 
-void AlgoMap::init()
+void AlgoMap::resetCurAlgorithm()
 {
-    loadPOI("data/poi.txt");
+    if (m_curAlgorithm == AlgoMap::Algorithm_VoronoiAnim)
+    {
+        const AlgoMap::PointList& poi = m_poiLocations[m_curPOI];
+        m_Voronoi.init(&poi[0], poi.size(), Rect::unit);
+    }
 }
 
 void AlgoMap::draw(const Rect& ext)
 {
-    g_pGLPainter->setTexture(bgImage);
+    g_pGLPainter->setTexture(m_bgImage);
     g_pGLPainter->setBlendMode(GLPainter::BlendMode_Normal);
-    Rect imgExt(ext);
+
+    Rect imgExt(1024 - 902, 0, ext.r, ext.b - 68);
     imgExt.shift(0.5f, -0.5f);
     g_pGLPainter->drawRect(imgExt.l, imgExt.t, imgExt.r, imgExt.b, 0xEEFFFFFF);
 
-    const AlgoMap::PointList& poi = poiLocations[curPOI];
-
-    if (curAlgorithm == AlgoMap::Algorithm_Voronoi)
-    {
-        //g_pGLPainter->setTexture(0);
-
-        //VoronoiDiagramGenerator v;
-        //
-        //size_t npt = poi.size();
-        //std::vector<float> px(npt), py(npt);
-        //for (size_t i = 0; i < npt; i++)
-        //{
-        //    const Point& a = poi[i];
-        //    px[i] = ext.l + a.x*float(ext.r - ext.l);
-        //    py[i] = ext.t + a.y*float(ext.b - ext.t);            
-        //}
-
-        //v.generateVoronoi(&px[0], &py[0], npt, ext.l, ext.r, ext.t, ext.b, 1e-2f);
-        //
-        //v.resetIterator();
-        //float ax, ay, bx, by;
-        //while (v.getNext(ax, ay, bx, by))
-        //{
-        //    g_pGLPainter->drawLine(ax, ay, bx, by, 0xF01111FF, 2);
-        //}
-    }
-
     //  points
-    if (curAlgorithm == AlgoMap::Algorithm_HeatMap)
+    if (m_curAlgorithm == AlgoMap::Algorithm_HeatMap)
     {
-        g_pGLPainter->setTexture(0);
-        g_pGLPainter->drawRect(ext.l, ext.t, ext.r, ext.b, 0x55000022);
-
-        g_pGLPainter->setBlendMode(GLPainter::BlendMode_Additive);
-        g_pGLPainter->setTexture(blobImage);
-        size_t nPt = poi.size();
-        for (size_t i = 0; i < nPt; i++)
-        {
-            const Point& pt = poi[i];
-            float x = ext.l + pt.x*float(ext.r - ext.l);
-            float y = ext.t + pt.y*float(ext.b - ext.t);
-            float r = heatMapBlobRadius;
-            g_pGLPainter->drawRect(x - r, y - r, x + r, y + r, 0xFFFFFFFF);
-        }
-        g_pGLPainter->setBlendMode(GLPainter::BlendMode_Normal);
+        drawHeatMap(imgExt);
     }
     else
     {
-        g_pGLPainter->setTexture(knobImage);
-        size_t nPt = poi.size();
-        for (size_t i = 0; i < nPt; i++)
-        {
-            const Point& pt = poi[i];
-            float x = ext.l + pt.x*float(ext.r - ext.l);
-            float y = ext.t + pt.y*float(ext.b - ext.t);
-            float r = 12;
-            g_pGLPainter->drawRect(x - r, y - r, x + r, y + r, 0xFFFFFFFF);
-        }
+        drawPOI(imgExt);
     }
+
+    if (m_curAlgorithm == AlgoMap::Algorithm_VoronoiAnim)
+    {
+        m_VoronoiAnim.draw(imgExt, m_Voronoi);
+    }
+
+    //  GUI
+    g_IMGUI.panel(Rect(0, 0, imgExt.l, ext.b).inflated(-2), 0xFF444477);
+    bool bPOIChanged = g_IMGUI.listBox(Rect(0, 0, imgExt.l, ext.b).inflated(-4), 15.0f, m_poiNames, m_curPOI);
+    bool bAlgoChanged = g_IMGUI.listBox(Rect(0, 600, imgExt.l, ext.b).inflated(-4), 15.0f, 
+        m_algorithmNames, m_curAlgorithm);
+
+    if (bPOIChanged || bAlgoChanged)
+    {
+        resetCurAlgorithm();
+    }
+
+    Rect legendExt(imgExt.l - 0.5f, imgExt.b + 1.0f, ext.r, ext.b);
+    g_IMGUI.panel(legendExt.inflated(-1), 0xFF444455);
+    g_IMGUI.label(legendExt, "Select POI in the listbox to the left, also choose the"\
+        " algorithm to apply from the second listbox.", 0xFFFFFFFF);
+}
+
+void AlgoMap::drawPOI(const Rect& ext)
+{
+    g_pGLPainter->setTexture(m_knobImage);
+
+    const AlgoMap::PointList& poi = m_poiLocations[m_curPOI];
+    size_t nPt = poi.size();
+    for (size_t i = 0; i < nPt; i++)
+    {
+        Point pt = ext.mapFromUnit(poi[i]);
+        float r = m_knobRadius;
+        g_pGLPainter->drawRect(pt.x - r, pt.y - r, pt.x + r, pt.y + r, 0xFFFFFFFF);
+    }
+}
+
+void AlgoMap::drawHeatMap(const Rect& ext)
+{
+    g_pGLPainter->setTexture(0);
+    g_pGLPainter->drawRect(ext.l, ext.t, ext.r, ext.b, 0x55000022);
+
+    g_pGLPainter->setBlendMode(GLPainter::BlendMode_Additive);
+    g_pGLPainter->setTexture(m_blobImage);
+
+    const AlgoMap::PointList& poi = m_poiLocations[m_curPOI];
+    size_t nPt = poi.size();
+    for (size_t i = 0; i < nPt; i++)
+    {
+        Point pt = ext.mapFromUnit(poi[i]);
+        float r = m_heatMapBlobRadius;
+        g_pGLPainter->drawRect(pt.x - r, pt.y - r, pt.x + r, pt.y + r, 0xFFFFFFFF);
+    }
+    g_pGLPainter->setBlendMode(GLPainter::BlendMode_Normal);
 }
 
 void AlgoMap::onResize()
 {
-    blobImage = g_pGLPainter->loadTexture("data/blob.tga");
-    knobImage = g_pGLPainter->loadTexture("data/knob.tga");    
-    bgImage = g_pGLPainter->loadTexture("data/oslo_downtown.tga");
+    m_blobImage = g_pGLPainter->loadTexture("data/blob.tga");
+    m_knobImage = g_pGLPainter->loadTexture("data/knob.tga");    
+    m_bgImage = g_pGLPainter->loadTexture("data/oslo_downtown.tga");
 }

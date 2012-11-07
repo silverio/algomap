@@ -1,28 +1,8 @@
 //  Implements Stephen J. Fortune's sweeping line algorithm for building Voronoi diagram
 #include <geom.h>
 #include <assert.h>
-#include <queue>
 
 #include <voronoi.h>
-
-
-//  "Event" data structure for the Fortune's algorithm
-struct FEvent
-{
-    enum Type { Site, Circle };
-    bool operator <(const FEvent& ev) const { return pt.y < ev.pt.y; }
-
-    Point   pt;     //  corresponding point (site or vertex)
-    Type    type;   //  event type
-};
-
-
-struct FArc
-{
-    Point pt;
-};
-
-typedef std::vector<FArc> BeachLine;
 
 static const float EPSILON = 1e-7f;
 
@@ -77,7 +57,7 @@ bool circleEventPoint(const Point& p0, const Point& p1, const Point& p2, Point& 
 }
 
 // binary searches for the site, corresponding to the given coordinate x on the beachfront 
-int findArc(float x, float yL, const BeachLine& beachLine)
+int findArc(float x, float yL, const Voronoi::BeachLine& beachLine)
 {
     size_t n = beachLine.size();
     size_t l = 0;
@@ -96,69 +76,79 @@ int findArc(float x, float yL, const BeachLine& beachLine)
 }
 
 
-void ComputeVoronoiDiagram(const std::vector<Point>& sites, Graph& voronoi)
+void Voronoi::init(const Point* sites, int numSites, const Rect& bounds)
 {
-    size_t numSites = sites.size();
-    
-    std::priority_queue<FEvent> events;
-    BeachLine beachLine;
+    m_numSites = numSites;
+    m_pSites = sites;
 
     // beach line size can not grow bigger than 2n-1
-    beachLine.reserve(2*numSites - 1); 
+    m_beachLine.reserve(2*m_numSites - 1); 
 
     //  add all sites as "site events" to the event queue
-    for (size_t i = 0; i < numSites; i++)
+    for (size_t i = 0; i < m_numSites; i++)
     {
         FEvent ev;
         ev.pt = sites[i];
         ev.type = FEvent::Site;
-        events.push(ev);
+        m_events.push(ev);
+    }
+}
+
+bool Voronoi::step()
+{
+    if (m_events.empty())
+    {
+        return false;
     }
 
-    while (!events.empty())
+    FEvent ev = m_events.top();
+    m_events.pop();
+    if (ev.type == FEvent::Site)
     {
-        FEvent ev = events.top();
-        events.pop();
-        if (ev.type == FEvent::Site)
+        //  handle the site event
+        if (m_beachLine.size() != 0)
         {
-            //  handle the site event
-            if (beachLine.size() != 0)
-            {
-                size_t k = findArc(ev.pt.x, ev.pt.y, beachLine);
-                //  break the arc
-                FArc newArc;
-                newArc.pt = ev.pt;
-                beachLine.insert(beachLine.begin() + k, newArc);
-                beachLine.insert(beachLine.begin() + k, beachLine[k + 1]);
+            size_t k = findArc(ev.pt.x, ev.pt.y, m_beachLine);
+            //  break the arc
+            FArc newArc;
+            newArc.pt = ev.pt;
+            m_beachLine.insert(m_beachLine.begin() + k, newArc);
+            m_beachLine.insert(m_beachLine.begin() + k, m_beachLine[k + 1]);
 
-                //  check for the potential circle events
-                size_t l = std::max(k - 1, (size_t)0);
-                size_t r = std::min(k + 1, beachLine.size() - 3);
-                Point xc;
-                for (size_t i = l; i <= r; i++)
-                {
-                    if (circleEventPoint(beachLine[i].pt, beachLine[i + 1].pt, 
-                        beachLine[i + 2].pt, xc))
-                    {
-                        FEvent cev;
-                        cev.type = FEvent::Circle;
-                        cev.pt = xc;
-                        events.push(cev);
-                    }
-                }
-            }
-            else
+            //  check for the potential circle events
+            size_t l = std::max(k - 1, (size_t)0);
+            size_t r = std::min(k + 1, m_beachLine.size() - 3);
+            Point xc;
+            for (size_t i = l; i <= r; i++)
             {
-                //  this is the very first point in the beach line
-                FArc arc;
-                arc.pt = ev.pt;
-                beachLine.push_back(arc);
+                if (circleEventPoint(m_beachLine[i].pt, m_beachLine[i + 1].pt, 
+                    m_beachLine[i + 2].pt, xc))
+                {
+                    FEvent cev;
+                    cev.type = FEvent::Circle;
+                    cev.pt = xc;
+                    m_events.push(cev);
+                }
             }
         }
         else
         {
-            //  handle circle event
+            //  this is the very first point in the beach line
+            FArc arc;
+            arc.pt = ev.pt;
+            m_beachLine.push_back(arc);
         }
     }
+    else
+    {
+        //  handle circle event
+    }
 
+    return true;
+}
+
+
+void Voronoi::run()
+{
+    while (step());
 }

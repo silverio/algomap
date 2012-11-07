@@ -2,6 +2,15 @@
 #define __GEOM_H__
 #include <vector>
 
+struct Point
+{
+    float x;
+    float y;
+
+    Point() : x(0.0f), y(0.0f) {}
+    Point(float x_, float y_) : x(x_), y(y_) {}
+};
+
 struct Rect
 {
     float l;    // left
@@ -21,16 +30,13 @@ struct Rect
     inline void inflate(float d) { l -= d; t -= d; r += d; b += d; }
     inline void inflate(float dl, float dt, float dr, float db) { l -= dl; t -= dt; r += dr; b += db; }
     inline void shift(float dx, float dy) { l -= dx; t -= dy; r += dx; b += dy; }
+    
+    inline Point mapFromUnit(const Point& pt) const
+    {
+        return Point(l + pt.x*(r - l), t + pt.y*(b - t));
+    }
 
-};
-
-struct Point
-{
-    float x;
-    float y;
-
-    Point() : x(0.0f), y(0.0f) {}
-    Point(float x_, float y_) : x(x_), y(y_) {}
+    static const Rect unit;
 };
 
 struct Graph

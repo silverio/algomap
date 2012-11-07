@@ -11,18 +11,24 @@
 class IMGUI
 {
 public:
-    void listBox(const Rect& ext, float rowHeight, const std::vector<std::string>& items, int& selIdx);
+    bool listBox(const Rect& ext, float rowHeight, const std::vector<std::string>& items, int& selIdx);
     void panel(const Rect& ext, Color color, bool colorBorder = true);
     void label(const Rect& ext, const char* text, Color color);
 
     void onMouseClick(float x, float y);
     bool isMouseClicked(const Rect& ext);
-    
+    void onTimeStep(double dtSec) { m_DeltaTimeSec = dtSec; }
+
     void frame();
+
+    double getDeltaTime() const { return m_DeltaTimeSec; }
 
 private:
     float m_MouseX, m_MouseY;
     bool  m_bMouseClicked;
+    double m_DeltaTimeSec;
 };
+
+extern IMGUI g_IMGUI;
 
 #endif

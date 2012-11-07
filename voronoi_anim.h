@@ -7,7 +7,7 @@
 class VoronoiAnim
 {
 public:
-    VoronoiAnim() : animSpeed(0.1f), m_lineY(0.0f) {}
+    VoronoiAnim() : animSpeed(0.1f), m_lineY(0.3f) {}
 
     void step(float dt, Voronoi& v);
     void draw(const Rect& ext, const Voronoi& v);

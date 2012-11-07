@@ -3,6 +3,8 @@
 #include <glpainter.h>
 #include <colorf.h>
 
+IMGUI g_IMGUI;
+
 static const float FONT_HEIGHT = 10.0f;
 
 void IMGUI::onMouseClick(float x, float y)
@@ -20,16 +22,21 @@ bool IMGUI::isMouseClicked(const Rect& ext)
 void IMGUI::frame()
 {
     m_bMouseClicked = false;
+    m_DeltaTimeSec = 0.0;
 }
 
-void IMGUI::listBox(const Rect& ext, float rowHeight, const std::vector<std::string>& items, int& selIdx)
+bool IMGUI::listBox(const Rect& ext, float rowHeight, const std::vector<std::string>& items, int& selIdx)
 {
+    bool selChanged = false;
+
     size_t nItems = items.size();
     float width = ext.r - ext.l;
     for (size_t i = 0; i < nItems; i++)
     {
-        if (isMouseClicked(Rect(ext.l, ext.t + i*rowHeight, ext.r, ext.t + (i + 1)*rowHeight)))
+        if (isMouseClicked(Rect(ext.l, ext.t + i*rowHeight, ext.r, ext.t + (i + 1)*rowHeight)) &&
+            selIdx != i)
         {
+            selChanged = true;
             selIdx = i;
         }
     }
@@ -50,6 +57,8 @@ void IMGUI::listBox(const Rect& ext, float rowHeight, const std::vector<std::str
         g_pGLPainter->drawText(textX, textY, items[i].c_str(), textColor);
         y += rowHeight;
     }
+
+    return selChanged;
 }
 
 void drawBevel(const Rect& ext, Color topColor, Color bottomColor, float width = 1.0f, bool isTop = true)

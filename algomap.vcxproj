@@ -80,6 +80,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="algomap.cpp" />
+    <ClCompile Include="geom.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="glpainter.cpp" />

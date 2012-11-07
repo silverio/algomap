@@ -7,9 +7,7 @@
 
 #include <GL/glut.h>
 
-IMGUI imgui;
 AlgoMap algomap;
-
 
 unsigned int screenWidth = 0;
 unsigned int screenHeight = 0;
@@ -18,20 +16,8 @@ static void display(void)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Rect ext(1024 - 902, 0, screenWidth, screenHeight - 68);
-
-    algomap.draw(ext);
-
-    imgui.panel(Rect(0, 0, ext.l, screenHeight).inflated(-2), 0xFF444477);
-    imgui.listBox(Rect(0, 0, ext.l, screenHeight).inflated(-4), 15.0f, algomap.poiNames, algomap.curPOI);
-    imgui.listBox(Rect(0, 600, ext.l, screenHeight).inflated(-4), 15.0f, algomap.algorithmNames, algomap.curAlgorithm);
-
-    Rect legendExt(ext.l, ext.b, screenWidth, screenHeight);
-    imgui.panel(legendExt.inflated(-1), 0xFF444455);
-    imgui.label(legendExt, "Select POI in the listbox to the left, also choose the"\
-        " algorithm to apply from the second listbox.", 0xFFFFFFFF);
-
-    imgui.frame();
+    algomap.draw(Rect(0, 0, screenWidth, screenHeight));
+    g_IMGUI.frame();
 
     glutSwapBuffers();
 } 
@@ -61,16 +47,27 @@ static void resize(int width, int height)
     algomap.onResize();
 } 
 
+double getCurTime()
+{
+    return ((double)glutGet(GLUT_ELAPSED_TIME))/1000.0;
+}
+
 static void update(int value)
 {
-    int time = (int)glutGet(GLUT_ELAPSED_TIME) / 1000.0;
+    static double lastTime = getCurTime();
+    double curTime = getCurTime();
+    double dt = curTime - lastTime;
+    lastTime = curTime;
+    
+    g_IMGUI.onTimeStep(dt);
+
     glutTimerFunc(25, update, 0);
     glutPostRedisplay();
 } 
 
 void onMouse(int button, int state, int x, int y)
 {
-    imgui.onMouseClick(x, y);
+    g_IMGUI.onMouseClick(x, y);
 }
 
 static const int WINDOW_WIDTH  = 1024;
