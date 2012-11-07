@@ -6,6 +6,12 @@
 
 static const float EPSILON = 1e-7f;
 
+//  the beachfront parabola equation
+float parabolaPoint(const Point& c, float yL, float x)
+{
+    return ((x - c.x)*(x - c.x) + c.y*c.y - yL*yL)*0.5f/(c.y - yL);
+}
+
 //  finds the point where two sites' parabolas meet
 bool computeBreakPoint(const Point& p0, const Point& p1, float yL, float& bpx)
 {
@@ -66,8 +72,8 @@ int findArc(float x, float yL, const Voronoi::BeachLine& beachLine)
     while (r > l)
     {
         size_t k = (l + r)/2;
-        const Point& p0 = beachLine[k].pt;
-        const Point& p1 = beachLine[k + 1].pt;
+        const Point& p0 = beachLine[k]->pt;
+        const Point& p1 = beachLine[k + 1]->pt;
         bool hasBP = computeBreakPoint(p0, p1, yL, bpx);
         assert(hasBP);
         if (bpx < x) l = k + 1; else r = k;
@@ -75,23 +81,29 @@ int findArc(float x, float yL, const Voronoi::BeachLine& beachLine)
     return l;
 }
 
+void Voronoi::reset()
+{
+    // beach line size can not grow bigger than 2n-1
+    m_beachLine.clear();
+    m_beachLine.reserve(2*m_numSites - 1); 
+
+    //  add all sites as "site events" to the event queue
+    m_events.swap(std::priority_queue<FEvent>());
+    for (size_t i = 0; i < m_numSites; i++)
+    {
+        FEvent ev;
+        ev.pt = m_pSites[i];
+        ev.type = FEvent::Site;
+        m_events.push(ev);
+    }
+}
 
 void Voronoi::init(const Point* sites, int numSites, const Rect& bounds)
 {
     m_numSites = numSites;
     m_pSites = sites;
 
-    // beach line size can not grow bigger than 2n-1
-    m_beachLine.reserve(2*m_numSites - 1); 
-
-    //  add all sites as "site events" to the event queue
-    for (size_t i = 0; i < m_numSites; i++)
-    {
-        FEvent ev;
-        ev.pt = sites[i];
-        ev.type = FEvent::Site;
-        m_events.push(ev);
-    }
+    reset();
 }
 
 bool Voronoi::step()
@@ -106,14 +118,21 @@ bool Voronoi::step()
     if (ev.type == FEvent::Site)
     {
         //  handle the site event
+        FArc* pNewArc = new FArc();
+        pNewArc->pt = ev.pt;
         if (m_beachLine.size() != 0)
         {
             size_t k = findArc(ev.pt.x, ev.pt.y, m_beachLine);
+            FArc* pHitArc = m_beachLine[k];
             //  break the arc
-            FArc newArc;
-            newArc.pt = ev.pt;
-            m_beachLine.insert(m_beachLine.begin() + k, newArc);
-            m_beachLine.insert(m_beachLine.begin() + k, m_beachLine[k + 1]);
+            
+            m_beachLine.insert(m_beachLine.begin() + k, pNewArc);
+            //  duplicate the existing arc
+            FArc* pDupArc = new FArc(*pHitArc);
+            m_beachLine.insert(m_beachLine.begin() + k, pDupArc);
+
+            //  create the new dangling edge
+            //  ...
 
             //  check for the potential circle events
             size_t l = std::max(k - 1, (size_t)0);
@@ -121,12 +140,13 @@ bool Voronoi::step()
             Point xc;
             for (size_t i = l; i <= r; i++)
             {
-                if (circleEventPoint(m_beachLine[i].pt, m_beachLine[i + 1].pt, 
-                    m_beachLine[i + 2].pt, xc))
+                if (circleEventPoint(m_beachLine[i]->pt, m_beachLine[i + 1]->pt, 
+                    m_beachLine[i + 2]->pt, xc))
                 {
                     FEvent cev;
                     cev.type = FEvent::Circle;
                     cev.pt = xc;
+                    cev.arc = m_beachLine[i + 1];
                     m_events.push(cev);
                 }
             }
@@ -134,14 +154,18 @@ bool Voronoi::step()
         else
         {
             //  this is the very first point in the beach line
-            FArc arc;
-            arc.pt = ev.pt;
-            m_beachLine.push_back(arc);
+            m_beachLine.push_back(pNewArc);
         }
     }
     else
     {
         //  handle circle event
+
+        //  remove the corresponding arc from the beachline
+
+        //  create new vertex in the voronoi diagram, start the new dangling edge
+
+        //  check for the new potential circle events
     }
 
     return true;

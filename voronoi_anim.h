@@ -4,18 +4,24 @@
 #include <geom.h>
 #include <voronoi.h>
 
+#include <colorf.h>
+
 class VoronoiAnim
 {
 public:
-    VoronoiAnim() : animSpeed(0.1f), m_lineY(0.3f) {}
+    VoronoiAnim();
 
-    void step(float dt, Voronoi& v);
-    void draw(const Rect& ext, const Voronoi& v);
+    void draw(const Rect& ext, Voronoi& v);
+    void reset();
 
     float   animSpeed;
+    bool    paused;
+    bool    pauseOnEvent;
 
 private:
     float   m_lineY;
+
+    void drawArc(const Rect& ext, size_t arcIdx, const Voronoi::BeachLine& bl, ColorF color) const;
 };
 
 #endif // __VORONOI_ANIM_H__

@@ -90,6 +90,7 @@ void AlgoMap::resetCurAlgorithm()
     {
         const AlgoMap::PointList& poi = m_poiLocations[m_curPOI];
         m_Voronoi.init(&poi[0], poi.size(), Rect::unit);
+        m_VoronoiAnim.reset();
     }
 }
 

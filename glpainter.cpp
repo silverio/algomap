@@ -52,6 +52,31 @@ void GLPainter::drawTriangle(float x1, float y1, float x2, float y2, float x3, f
     glEnd();
 }
 
+void GLPainter::drawCircle(float x, float y, float r, Color color, int numSegments) const
+{
+    glColor4ubv(reinterpret_cast<const GLubyte*>(&color));
+
+    assert(numSegments > 0);
+    static const float PI = 3.1415926f;
+    float dphi = 2.0f*PI/float(numSegments);
+
+    float c = cosf(dphi);
+    float s = sinf(dphi);
+    
+    float px = r;
+    float py = 0.0f; 
+
+    glBegin(GL_LINE_LOOP); 
+    for (int i = 0; i < numSegments; i++) 
+    { 
+        glVertex2f(x + px, y + py);
+        float rx = c*px - s*py;
+        float ry = s*px + c*py;
+        px = rx; py = ry;
+    } 
+    glEnd(); 
+}
+
 void GLPainter::drawRect(float xLeft, float yTop, float xRight, float yBottom, Color color) const
 {
     glColor4ubv(reinterpret_cast<const GLubyte*>(&color));

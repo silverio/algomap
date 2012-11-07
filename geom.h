@@ -31,6 +31,7 @@ struct Rect
     inline void inflate(float dl, float dt, float dr, float db) { l -= dl; t -= dt; r += dr; b += db; }
     inline void shift(float dx, float dy) { l -= dx; t -= dy; r += dx; b += dy; }
     
+    //  maps point's coordinates from unit rectangle into this one
     inline Point mapFromUnit(const Point& pt) const
     {
         return Point(l + pt.x*(r - l), t + pt.y*(b - t));

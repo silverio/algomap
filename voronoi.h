@@ -14,13 +14,17 @@ public:
     bool step();
 
     void run();
+    void reset();
 
     struct FArc
     {
-        Point pt;
+        FArc() : active(true) {}
+
+        bool    active;
+        Point   pt;
     };
 
-    typedef std::vector<FArc> BeachLine;
+    typedef std::vector<FArc*> BeachLine;
 
 private:
     friend class VoronoiAnim;
@@ -28,11 +32,14 @@ private:
     //  "Event" data structure for the Fortune's algorithm
     struct FEvent
     {
+        FEvent() : arc(0) {}
+
         enum Type { Site, Circle };
         bool operator <(const FEvent& ev) const { return pt.y < ev.pt.y; }
 
-        Point   pt;     //  corresponding point (site or vertex)
-        Type    type;   //  event type
+        Point   pt;         //  corresponding point (site or circle)
+        Type    type;       //  event type
+        FArc*   arc;        //  the arc that created the event (for the circle events)
     };
 
     std::priority_queue<FEvent> m_events;
@@ -41,5 +48,10 @@ private:
     const Point*                m_pSites;
     size_t                      m_numSites;
 };
+
+float parabolaPoint(const Point& c, float yL, float x);
+bool computeBreakPoint(const Point& p0, const Point& p1, float yL, float& bpx);
+bool circleEventPoint(const Point& p0, const Point& p1, const Point& p2, Point& xc);
+int findArc(float x, float yL, const Voronoi::BeachLine& beachLine);
 
 #endif
