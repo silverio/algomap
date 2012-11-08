@@ -26,9 +26,9 @@ void drawBevel(const Rect& ext, Color topColor, Color bottomColor, float width =
 
 static const float FONT_HEIGHT = 10.0f;
 
-void IMGUI::onMouseClick(float x, float y)
+void IMGUI::onMouseAction(MouseAction action, MouseButton button, float x, float y)
 {
-    m_bMouseClicked = true;
+    if (action == Mouse_Up) m_bMouseClicked = true;
     m_MouseX = x;
     m_MouseY = y;
 }

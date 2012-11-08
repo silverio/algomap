@@ -73,15 +73,16 @@ void VoronoiAnim::draw(const Rect& ext, Voronoi& v)
             if (nArc >= 0)
             {
                 float R;
-                Point xc;
+                Point xe;
                 if (circleEventPoint(v.m_beachLine[nArc - 1]->pt, 
                                      v.m_beachLine[nArc    ]->pt,
-                                     v.m_beachLine[nArc + 1]->pt, xc, &R))
+                                     v.m_beachLine[nArc + 1]->pt, xe, &R))
                 {
                     //assert(fabs(xc.x - e.pt.x) < 1e-5f && fabs(xc.y - e.pt.y) < 1e-5f);
-                    Point mxc = ext.mapFromUnit(xc);
-                    Point mxx = ext.mapFromUnit(Point(xc.x, xc.y + R));
-                    g_pGLPainter->drawCircle(mxx.x, mxx.y, mxx.y - mxc.y, 0xFF00FFFF, 2);
+                    Point mxe = ext.mapFromUnit(xe);
+                    Point mxc = ext.mapFromUnit(Point(xe.x, xe.y + R));
+                    g_pGLPainter->drawCircle(mxc.x, mxc.y, mxc.y - mxe.y, 0xAA00FFFF, 1);
+                    g_pGLPainter->drawRect(mxc.x - 5, mxc.y - 5, mxc.x + 5, mxc.y + 5, 0xFF000000);
                 }
                 color = 0xFF00FFFF;
             }

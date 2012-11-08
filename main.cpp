@@ -65,13 +65,26 @@ static void update(int value)
     glutPostRedisplay();
 } 
 
-void onMouse(int button, int state, int x, int y)
+void onMouse(int btn, int state, int x, int y)
 {
-    if (state == GLUT_DOWN)
-    {
-        g_IMGUI.onMouseClick(x, y);
-    }
+    IMGUI::MouseAction action = IMGUI::Mouse_NoAction;
+    IMGUI::MouseButton button = IMGUI::Mouse_NoButton;
+
+    if (state == GLUT_DOWN) action = IMGUI::Mouse_Down;
+    else if (state == GLUT_UP) action = IMGUI::Mouse_Up;
+
+    if (btn == GLUT_LEFT_BUTTON) button = IMGUI::Mouse_Left;
+    else if (btn == GLUT_MIDDLE_BUTTON) button = IMGUI::Mouse_Middle;
+    else if (btn == GLUT_RIGHT_BUTTON) button = IMGUI::Mouse_Right;
+    
+    g_IMGUI.onMouseAction(action, button, x, y);
 }
+
+void onMouseMove(int x, int y)
+{
+    g_IMGUI.onMouseAction(IMGUI::Mouse_Move, IMGUI::Mouse_NoButton, x, y);
+}
+
 
 static const int WINDOW_WIDTH  = 1024;
 static const int WINDOW_HEIGHT = 768;
@@ -92,6 +105,7 @@ int main(int argc, char *argv[])
     glutReshapeFunc(resize);
     glutDisplayFunc(display);
     glutMouseFunc(onMouse);
+    glutMotionFunc(onMouseMove);
     glutTimerFunc(25, update, 0);
     
     algomap.init();
