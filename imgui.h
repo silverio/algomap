@@ -12,6 +12,9 @@ class IMGUI
 {
 public:
     bool listBox(const Rect& ext, float rowHeight, const std::vector<std::string>& items, int& selIdx);
+    bool toggleButton(const Rect& ext, const char* text, bool& bPressed);
+    bool checkBox(const Rect& ext, const char* text, bool& bPressed);
+
     void panel(const Rect& ext, Color color, bool colorBorder = true);
     void label(const Rect& ext, const char* text, Color color);
 

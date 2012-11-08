@@ -18,7 +18,7 @@ public:
     void drawLine(float x1, float y1, float x2, float y2, Color color, float width = 1.0f) const;
     void drawRect(float xLeft, float yTop, float xRight, float yBottom, Color color) const;
     void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, Color color) const;
-    void drawCircle(float x, float y, float r, Color color, int numSegments = 256) const;
+    void drawCircle(float x, float y, float r, Color color, float width, int numSegments = 256) const;
     
     void drawText(float x, float y, const char* text, Color color) const;
     int getTextWidth(const char* text) const;

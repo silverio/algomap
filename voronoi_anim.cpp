@@ -1,10 +1,12 @@
+#include <assert.h>
+
 #include <voronoi_anim.h>
 #include <voronoi.h>
 #include <glpainter.h>
 #include <imgui.h>
 
 VoronoiAnim::VoronoiAnim() : 
-    animSpeed   (0.01f), 
+    animSpeed   (0.03f), 
     m_lineY     (1.0f), 
     paused      (false), 
     pauseOnEvent(false) 
@@ -62,7 +64,30 @@ void VoronoiAnim::draw(const Rect& ext, Voronoi& v)
         Voronoi::FEvent e = events.top();
         Point pt = ext.mapFromUnit(e.pt);
         events.pop();
-        Color color = (e.type == Voronoi::FEvent::Site) ? 0xFF0000FF : 0xFF000000;
+        
+        Color color = 0xFFFF00FF;
+        if (e.type == Voronoi::FEvent::Circle)
+        {
+            //  draw the event circle
+            int nArc = v.getArcIdx(e.arc);
+            if (nArc >= 0)
+            {
+                float R;
+                Point xc;
+                if (circleEventPoint(v.m_beachLine[nArc - 1]->pt, 
+                                     v.m_beachLine[nArc    ]->pt,
+                                     v.m_beachLine[nArc + 1]->pt, xc, &R))
+                {
+                    //assert(fabs(xc.x - e.pt.x) < 1e-5f && fabs(xc.y - e.pt.y) < 1e-5f);
+                    Point mxc = ext.mapFromUnit(xc);
+                    Point mxx = ext.mapFromUnit(Point(xc.x, xc.y + R));
+                    g_pGLPainter->drawCircle(mxx.x, mxx.y, mxx.y - mxc.y, 0xFF00FFFF, 2);
+                }
+                color = 0xFF00FFFF;
+            }
+            else color = 0xFF888888;
+        }
+        
         float r = 4;
         g_pGLPainter->drawRect(pt.x - r, pt.y - r, pt.x + r, pt.y + r, color);
     }
@@ -82,7 +107,7 @@ void VoronoiAnim::draw(const Rect& ext, Voronoi& v)
     while (!v.m_events.empty())
     {
         Voronoi::FEvent topEv = v.m_events.top();
-        if (topEv.pt.y > m_lineY || topEv.pt.y < m_lineY - dy)
+        if (topEv.pt.y < m_lineY - dy)
         {
             break;
         }
@@ -95,18 +120,15 @@ void VoronoiAnim::draw(const Rect& ext, Voronoi& v)
             if (v.m_beachLine.size() > 0)
             {
                 int nArc = findArc(topEv.pt.x, m_lineY, v.m_beachLine);
-                drawArc(ext, nArc, v.m_beachLine, 0xFF0000FF);
-                Point a = ext.mapFromUnit(Point(topEv.pt.x, 
-                    parabolaPoint(v.m_beachLine[nArc]->pt, m_lineY, topEv.pt.x)));
-                Point b = ext.mapFromUnit(Point(topEv.pt.x, m_lineY));
-                g_pGLPainter->drawLine(a.x, a.y, b.x, b.y, 0xFF000000, 3.0f);
+                if (nArc >= 0)
+                {
+                    drawArc(ext, nArc, v.m_beachLine, 0xFF0000FF);
+                    Point a = ext.mapFromUnit(Point(topEv.pt.x, 
+                        parabolaPoint(v.m_beachLine[nArc]->pt, m_lineY, topEv.pt.x)));
+                    Point b = ext.mapFromUnit(Point(topEv.pt.x, m_lineY));
+                    g_pGLPainter->drawLine(a.x, a.y, b.x, b.y, 0xFF000000, 3.0f);
+                }
             }
-            // ...
-        }
-        else
-        {
-            //  draw the circle
-            g_pGLPainter->drawCircle(300, 300, 50, 0xFF00FFFF);
             // ...
         }
 

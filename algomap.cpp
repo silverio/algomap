@@ -24,7 +24,6 @@ AlgoMap::AlgoMap() :
 void AlgoMap::init()
 {
     loadPOI("data/poi.txt");
-
     resetCurAlgorithm();
 }
 
@@ -121,8 +120,17 @@ void AlgoMap::draw(const Rect& ext)
     //  GUI
     g_IMGUI.panel(Rect(0, 0, imgExt.l, ext.b).inflated(-2), 0xFF444477);
     bool bPOIChanged = g_IMGUI.listBox(Rect(0, 0, imgExt.l, ext.b).inflated(-4), 15.0f, m_poiNames, m_curPOI);
-    bool bAlgoChanged = g_IMGUI.listBox(Rect(0, 600, imgExt.l, ext.b).inflated(-4), 15.0f, 
+    bool bAlgoChanged = g_IMGUI.listBox(Rect(0, 550, imgExt.l, ext.b).inflated(-4), 15.0f, 
         m_algorithmNames, m_curAlgorithm);
+
+    if (m_curAlgorithm == AlgoMap::Algorithm_VoronoiAnim)
+    {
+        Rect pext(5, 670, imgExt.l - 5, ext.b - 5);
+        g_IMGUI.panel(pext, 0xFF444477);
+
+        g_IMGUI.toggleButton(Rect(pext.l + 3, pext.t + 5, pext.r - 3, pext.t + 20), "Pause", m_VoronoiAnim.paused);
+        g_IMGUI.checkBox(Rect(pext.l + 3, pext.t + 25, pext.r - 3, pext.t + 40), "Event Pause", m_VoronoiAnim.pauseOnEvent);
+    }
 
     if (bPOIChanged || bAlgoChanged)
     {

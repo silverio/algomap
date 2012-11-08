@@ -52,9 +52,10 @@ void GLPainter::drawTriangle(float x1, float y1, float x2, float y2, float x3, f
     glEnd();
 }
 
-void GLPainter::drawCircle(float x, float y, float r, Color color, int numSegments) const
+void GLPainter::drawCircle(float x, float y, float r, Color color, float width, int numSegments) const
 {
     glColor4ubv(reinterpret_cast<const GLubyte*>(&color));
+    glLineWidth(width);
 
     assert(numSegments > 0);
     static const float PI = 3.1415926f;

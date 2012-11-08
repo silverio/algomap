@@ -21,6 +21,9 @@ struct Rect
     Rect() : l(0.0f), t(0.0f), r(0.0f), b(0.0f) {}
     Rect(float l_, float t_, float r_, float b_) : l(l_), t(t_), r(r_), b(b_) {}
 
+    inline float w() const { return r - l; }
+    inline float h() const { return b - t; }
+
     inline bool contains(float x, float y) const { return x >= l && x <= r && y >= t && y <= b; }
 
     inline Rect inflated(float d) const { return Rect(l - d, t - d, r + d, b + d); }

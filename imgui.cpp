@@ -5,6 +5,25 @@
 
 IMGUI g_IMGUI;
 
+
+void drawBevel(const Rect& ext, Color topColor, Color bottomColor, float width = 1.0f, bool isTop = true)
+{
+    if (isTop)
+    {
+        g_pGLPainter->drawLine(ext.l, ext.t, ext.r, ext.t, topColor,    width );
+        g_pGLPainter->drawLine(ext.l, ext.t, ext.l, ext.b, topColor,    width );
+        g_pGLPainter->drawLine(ext.l, ext.b, ext.r + 0.5f, ext.b, bottomColor, width );
+        g_pGLPainter->drawLine(ext.r, ext.t, ext.r, ext.b, bottomColor, width );
+    }
+    else
+    {
+        g_pGLPainter->drawLine(ext.l, ext.t, ext.r, ext.t, topColor,    width );
+        g_pGLPainter->drawLine(ext.l, ext.t, ext.l, ext.b, topColor,    width );
+        g_pGLPainter->drawLine(ext.l, ext.b, ext.r + 0.5f, ext.b, bottomColor, width );
+        g_pGLPainter->drawLine(ext.r, ext.t, ext.r, ext.b, bottomColor, width );
+    }
+} 
+
 static const float FONT_HEIGHT = 10.0f;
 
 void IMGUI::onMouseClick(float x, float y)
@@ -23,6 +42,48 @@ void IMGUI::frame()
 {
     m_bMouseClicked = false;
     m_DeltaTimeSec = 0.0;
+}
+
+bool IMGUI::checkBox(const Rect& ext, const char* text, bool& bPressed)
+{
+    bool bModified = false;
+    if (isMouseClicked(ext))
+    {
+        bPressed = !bPressed;
+        bModified = true;
+    }
+    Rect thumbExt(ext.l, ext.t, ext.l + ext.h(), ext.b);
+    thumbExt.inflate(-1.0f);
+    Rect textExt(thumbExt.r + 5, ext.t, ext.r, ext.b);
+    
+    drawBevel(thumbExt, 0xFFEEEEEE, 0xFF848284);
+    if (bPressed)
+    {
+        panel(thumbExt.inflated(-2), 0xFFDDDDDD, true);
+    }
+
+    float textY = textExt.t + (textExt.b - textExt.t - FONT_HEIGHT)*0.5f + FONT_HEIGHT;
+    g_pGLPainter->drawText(textExt.l, textY, text, 0xFFDDDDDD);
+    return bModified;    
+}
+
+bool IMGUI::toggleButton(const Rect& ext, const char* text, bool& bPressed)
+{
+    bool bModified = false;
+    if (isMouseClicked(ext))
+    {
+        bPressed = !bPressed;
+        bModified = true;
+    }
+    Color textColor  = bPressed ? 0xFFDDDDDD : 0xFF222222;
+    Color panelColor = bPressed ? 0xFF222222 : 0xFFDDDDDD;
+    panel(ext, panelColor);
+
+    float textWidth = (float)g_pGLPainter->getTextWidth(text);
+    float textY = ext.t + (ext.b - ext.t - FONT_HEIGHT)*0.5f + FONT_HEIGHT;
+    float textX = ext.l + (ext.r - ext.l - textWidth)*0.5f;
+    g_pGLPainter->drawText(textX, textY, text, textColor);
+    return bModified;
 }
 
 bool IMGUI::listBox(const Rect& ext, float rowHeight, const std::vector<std::string>& items, int& selIdx)
@@ -60,24 +121,6 @@ bool IMGUI::listBox(const Rect& ext, float rowHeight, const std::vector<std::str
 
     return selChanged;
 }
-
-void drawBevel(const Rect& ext, Color topColor, Color bottomColor, float width = 1.0f, bool isTop = true)
-{
-    if (isTop)
-    {
-        g_pGLPainter->drawLine(ext.l, ext.t, ext.r, ext.t, topColor,    width );
-        g_pGLPainter->drawLine(ext.l, ext.t, ext.l, ext.b, topColor,    width );
-        g_pGLPainter->drawLine(ext.l, ext.b, ext.r + 0.5f, ext.b, bottomColor, width );
-        g_pGLPainter->drawLine(ext.r, ext.t, ext.r, ext.b, bottomColor, width );
-    }
-    else
-    {
-        g_pGLPainter->drawLine(ext.l, ext.t, ext.r, ext.t, topColor,    width );
-        g_pGLPainter->drawLine(ext.l, ext.t, ext.l, ext.b, topColor,    width );
-        g_pGLPainter->drawLine(ext.l, ext.b, ext.r + 0.5f, ext.b, bottomColor, width );
-        g_pGLPainter->drawLine(ext.r, ext.t, ext.r, ext.b, bottomColor, width );
-    }
-} 
 
 void IMGUI::panel(const Rect& ext, Color color, bool colorBorder)
 {

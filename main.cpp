@@ -67,7 +67,10 @@ static void update(int value)
 
 void onMouse(int button, int state, int x, int y)
 {
-    g_IMGUI.onMouseClick(x, y);
+    if (state == GLUT_DOWN)
+    {
+        g_IMGUI.onMouseClick(x, y);
+    }
 }
 
 static const int WINDOW_WIDTH  = 1024;

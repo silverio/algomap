@@ -38,7 +38,7 @@ bool computeBreakPoint(const Point& p0, const Point& p1, float yL, float& bpx)
 }
     
 //  returns the "circle event" point, which is the bottom of the circle through 3 given points
-bool circleEventPoint(const Point& p0, const Point& p1, const Point& p2, Point& xc)
+bool circleEventPoint(const Point& p0, const Point& p1, const Point& p2, Point& xc, float* pR)
 {
     float A = p1.x - p0.x;
     float B = p1.y - p0.y;
@@ -58,7 +58,8 @@ bool circleEventPoint(const Point& p0, const Point& p1, const Point& p2, Point& 
     
     xc.x = x0;
     xc.y = y0 - r;
-    
+
+    if (pR) *pR = r;
     return true;
 }
 
@@ -75,7 +76,7 @@ int findArc(float x, float yL, const Voronoi::BeachLine& beachLine)
         const Point& p0 = beachLine[k]->pt;
         const Point& p1 = beachLine[k + 1]->pt;
         bool hasBP = computeBreakPoint(p0, p1, yL, bpx);
-        assert(hasBP);
+        if (!hasBP) return -1;
         if (bpx < x) l = k + 1; else r = k;
     }
     return l;
@@ -106,6 +107,38 @@ void Voronoi::init(const Point* sites, int numSites, const Rect& bounds)
     reset();
 }
 
+bool Voronoi::checkCircleEvent(int startArc)
+{
+    Point xc;
+    if (startArc >= 0 && startArc < (int)m_beachLine.size() - 2 &&
+        circleEventPoint(m_beachLine[startArc]->pt, m_beachLine[startArc + 1]->pt, 
+        m_beachLine[startArc + 2]->pt, xc))
+    {
+        FEvent cev;
+        cev.type = FEvent::Circle;
+        cev.pt = xc;
+        cev.arc = m_beachLine[startArc + 1];
+        m_events.push(cev);
+        return true;
+    }
+    return false;
+}
+
+int Voronoi::getArcIdx(const FArc* arc) const
+{
+    size_t nArc = 0;
+    size_t nPt = m_beachLine.size();
+    while (nArc < nPt)
+    {
+        if (m_beachLine[nArc] == arc)
+        {
+            return nArc;
+        }
+        nArc++;
+    }
+    return -1;
+}
+
 bool Voronoi::step()
 {
     if (m_events.empty())
@@ -122,34 +155,22 @@ bool Voronoi::step()
         pNewArc->pt = ev.pt;
         if (m_beachLine.size() != 0)
         {
-            size_t k = findArc(ev.pt.x, ev.pt.y, m_beachLine);
-            FArc* pHitArc = m_beachLine[k];
+            int arcIdx = findArc(ev.pt.x, ev.pt.y, m_beachLine);
+            assert(arcIdx >= 0);
+            FArc* pHitArc = m_beachLine[arcIdx];
             //  break the arc
             
-            m_beachLine.insert(m_beachLine.begin() + k, pNewArc);
+            m_beachLine.insert(m_beachLine.begin() + arcIdx, pNewArc);
             //  duplicate the existing arc
             FArc* pDupArc = new FArc(*pHitArc);
-            m_beachLine.insert(m_beachLine.begin() + k, pDupArc);
+            m_beachLine.insert(m_beachLine.begin() + arcIdx, pDupArc);
 
             //  create the new dangling edge
             //  ...
 
-            //  check for the potential circle events
-            size_t l = std::max(k - 1, (size_t)0);
-            size_t r = std::min(k + 1, m_beachLine.size() - 3);
-            Point xc;
-            for (size_t i = l; i <= r; i++)
-            {
-                if (circleEventPoint(m_beachLine[i]->pt, m_beachLine[i + 1]->pt, 
-                    m_beachLine[i + 2]->pt, xc))
-                {
-                    FEvent cev;
-                    cev.type = FEvent::Circle;
-                    cev.pt = xc;
-                    cev.arc = m_beachLine[i + 1];
-                    m_events.push(cev);
-                }
-            }
+            //  check/add the potential circle events
+            checkCircleEvent(arcIdx - 1);
+            checkCircleEvent(arcIdx + 1);
         }
         else
         {
@@ -160,12 +181,18 @@ bool Voronoi::step()
     else
     {
         //  handle circle event
-
         //  remove the corresponding arc from the beachline
+        //  FIXME:
+        int nArc = getArcIdx(ev.arc);
+        if (nArc >= 0)
+        {
+            m_beachLine.erase(m_beachLine.begin() + nArc);
+            //  create new vertex in the voronoi diagram, start the new dangling edge
 
-        //  create new vertex in the voronoi diagram, start the new dangling edge
-
-        //  check for the new potential circle events
+            //  check for the new potential circle events
+            checkCircleEvent(nArc - 1);
+            checkCircleEvent(nArc);
+        }
     }
 
     return true;

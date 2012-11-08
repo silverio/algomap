@@ -27,6 +27,9 @@ public:
     typedef std::vector<FArc*> BeachLine;
 
 private:
+    bool checkCircleEvent(int startArc);
+    int getArcIdx(const FArc* arc) const;
+
     friend class VoronoiAnim;
 
     //  "Event" data structure for the Fortune's algorithm
@@ -51,7 +54,7 @@ private:
 
 float parabolaPoint(const Point& c, float yL, float x);
 bool computeBreakPoint(const Point& p0, const Point& p1, float yL, float& bpx);
-bool circleEventPoint(const Point& p0, const Point& p1, const Point& p2, Point& xc);
+bool circleEventPoint(const Point& p0, const Point& p1, const Point& p2, Point& xc, float* pR = NULL);
 int findArc(float x, float yL, const Voronoi::BeachLine& beachLine);
 
 #endif
