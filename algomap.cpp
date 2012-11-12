@@ -130,6 +130,9 @@ void AlgoMap::draw(const Rect& ext)
 
         g_IMGUI.toggleButton(Rect(pext.l + 3, pext.t + 5, pext.r - 3, pext.t + 20), "Pause", m_VoronoiAnim.paused);
         g_IMGUI.checkBox(Rect(pext.l + 3, pext.t + 25, pext.r - 3, pext.t + 40), "Event Pause", m_VoronoiAnim.pauseOnEvent);
+
+        g_IMGUI.label(Rect(pext.l + 3, pext.t + 50, pext.r - 3, pext.t + 70), "Animation Speed:", 0xFFAAAAAA);
+        g_IMGUI.slider(Rect(pext.l + 3, pext.t + 70, pext.r - 3, pext.t + 85), 0.0f, 0.2f, m_VoronoiAnim.animSpeed);
     }
 
     if (bPOIChanged || bAlgoChanged)

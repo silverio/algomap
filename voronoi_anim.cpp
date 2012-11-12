@@ -130,7 +130,6 @@ void VoronoiAnim::draw(const Rect& ext, Voronoi& v)
                     g_pGLPainter->drawLine(a.x, a.y, b.x, b.y, 0xFF000000, 3.0f);
                 }
             }
-            // ...
         }
 
         //  pause the animation

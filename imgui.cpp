@@ -28,26 +28,26 @@ static const float FONT_HEIGHT = 10.0f;
 
 void IMGUI::onMouseAction(MouseAction action, MouseButton button, float x, float y)
 {
-    if (action == Mouse_Up) m_bMouseClicked = true;
+    m_MouseAction = action;
     m_MouseX = x;
     m_MouseY = y;
 }
 
-bool IMGUI::isMouseClicked(const Rect& ext)
+bool IMGUI::isMouseAction(const Rect& ext, unsigned int actionFlags, unsigned int buttonFlags)
 {
-    return m_bMouseClicked && ext.contains(m_MouseX, m_MouseY);
+    return ((actionFlags & m_MouseAction) != 0) && ext.contains(m_MouseX, m_MouseY);
 }
     
 void IMGUI::frame()
 {
-    m_bMouseClicked = false;
+    m_MouseAction = Mouse_NoAction;
     m_DeltaTimeSec = 0.0;
 }
 
 bool IMGUI::checkBox(const Rect& ext, const char* text, bool& bPressed)
 {
     bool bModified = false;
-    if (isMouseClicked(ext))
+    if (isMouseAction(ext, Mouse_Down, Mouse_Left))
     {
         bPressed = !bPressed;
         bModified = true;
@@ -67,10 +67,30 @@ bool IMGUI::checkBox(const Rect& ext, const char* text, bool& bPressed)
     return bModified;    
 }
 
+bool IMGUI::slider(const Rect& ext, float minVal, float maxVal, float& val)
+{
+    bool bModified = false;
+    if (isMouseAction(ext, Mouse_Down|Mouse_Move, Mouse_Left))
+    {
+        val = clamp(minVal + (maxVal - minVal)*(m_MouseX - ext.l)/ext.w(), minVal, maxVal);
+        bModified = true;
+    }
+
+    bool bChanged = false;
+    Rect bgExt(ext);
+    bgExt.inflate(0.0f, -5.0f, 0.0f, -5.0f);
+    panel(bgExt, 0xFFDDDDDD);
+    float spos = clamp(val/(maxVal - minVal), 0.0f, 1.0f);
+    float tx = ext.l + ext.w()*spos;
+    Rect thumbExt(tx - 2.0f, ext.t, tx + 2.0f, ext.b);
+    panel(thumbExt, 0xFFDDDDDD);
+    return bModified;
+}
+
 bool IMGUI::toggleButton(const Rect& ext, const char* text, bool& bPressed)
 {
     bool bModified = false;
-    if (isMouseClicked(ext))
+    if (isMouseAction(ext, Mouse_Down, Mouse_Left))
     {
         bPressed = !bPressed;
         bModified = true;
@@ -94,7 +114,7 @@ bool IMGUI::listBox(const Rect& ext, float rowHeight, const std::vector<std::str
     float width = ext.r - ext.l;
     for (size_t i = 0; i < nItems; i++)
     {
-        if (isMouseClicked(Rect(ext.l, ext.t + i*rowHeight, ext.r, ext.t + (i + 1)*rowHeight)) &&
+        if (isMouseAction(Rect(ext.l, ext.t + i*rowHeight, ext.r, ext.t + (i + 1)*rowHeight), Mouse_Down, Mouse_Left) &&
             selIdx != i)
         {
             selChanged = true;
